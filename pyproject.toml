@@ -1,0 +1,5 @@
+[project]
+name = "survey-platform"
+version = "0.1.0"
+description = "Plataforma de encuestas con análisis de resultados"
+requires-python = ">=3.11"
