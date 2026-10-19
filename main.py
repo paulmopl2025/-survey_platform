@@ -1,12 +1,7 @@
-from modelos.encuesta import ESTADO_BORRADOR, PRIVACIDAD_ELIGE, PRIVACIDAD_NOMBRE
-from modelos.reporte import ReporteEstandar
+from modelos.encuesta import Encuesta
+from modelos.pregunta import PreguntaSeleccionUnica, PreguntaTextoLibre
 from patrones.encuesta_builder import EncuestaBuilder
-from patrones.pregunta_creator import (
-    CreadorEscala,
-    CreadorOpcionMultiple,
-    CreadorSeleccionUnica,
-    CreadorTextoLibre,
-)
+from patrones.pregunta_creator import CreadorSeleccionUnica, CreadorTextoLibre
 from servicios.plataforma import PlataformaEncuestas
 
 
@@ -14,56 +9,53 @@ def main():
     plataforma = PlataformaEncuestas()
     builder = EncuestaBuilder()
 
-    print("=" * 50)
-    print("   BIENVENIDO A PLATAFORMA DE ENCUESTAS")
-    print("=" * 50)
+    print("=" * 60)
+    print("   SISTEMA DE PLATAFORMA DE ENCUESTAS (RF-01 a RF-08)")
+    print("=" * 60)
 
-    # --- DEMOSTRACIÓN DE FUNCIONALIDAD ---
-    # 1. Crear una encuesta con el Builder (RF-01)
-    encuesta1 = (
-        builder.set_titulo("Encuesta de Satisfacción Laboral")
-        .set_descripcion("Medición de clima organizacional 2026")
-        .set_privacidad(PRIVACIDAD_ELIGE)
+    # 1. RF-01 / RF-05: Crear y construir encuesta progresivamente (Builder)
+    encuesta_original = (
+        builder.set_titulo("Encuesta de Evaluación Académica")
+        .set_descripcion("Evaluación del curso de Programación Orientada a Objetos")
         .build()
     )
 
-    # 2. Agregar preguntas usando los Creadores Factory Method (RF-02 y RF-03)
+    # 2. RF-02 / RF-03: Crear preguntas y configurar opciones (Factory Method)
     creador_su = CreadorSeleccionUnica()
-    creador_escala = CreadorEscala()
     creador_texto = CreadorTextoLibre()
 
     p1 = creador_su.crear_pregunta(
-        "¿Cómo evalúas el ambiente de trabajo?", ["Excelente", "Bueno", "Regular", "Malo"]
+        "¿Cómo califica el contenido de la asignatura?",
+        ["Excelente", "Aceptable", "Insuficiente"]
     )
-    p2 = creador_escala.crear_pregunta("¿Qué tan satisfecho estás con tus herramientas?")
-    p3 = creador_texto.crear_pregunta("¿Qué sugerencia tienes para mejorar?")
+    p2 = creador_texto.crear_pregunta("¿Qué temas sugiere incluir para el próximo semestre?")
 
-    encuesta1.agregar_pregunta(p1)
-    encuesta1.agregar_pregunta(p2)
-    encuesta1.agregar_pregunta(p3)
+    encuesta_original.agregar_pregunta(p1)
+    encuesta_original.agregar_pregunta(p2)
 
-    plataforma.registrar_encuesta(encuesta1)
+    plataforma.registrar_encuesta(encuesta_original)
 
-    # 3. Publicar y generar Token Singleton (RF-06)
-    token = plataforma.publicar_encuesta(encuesta1.id)
-    print(f"\nEncuesta '{encuesta1.titulo}' creada y publicada exitosamente.")
-    print(f"Token de acceso único: {token}")
+    # 3. RF-08: Validar y publicar encuesta
+    token = plataforma.publicar_encuesta(encuesta_original.id)
+    print(f"\nEncuesta '{encuesta_original.titulo}' creada y validada correctamente.")
+    print(f"Token de acceso generado: {token}")
 
-    # 4. Probar clonación con Prototype (RF-04)
-    encuesta_clonada = encuesta1.clone()
-    plataforma.registrar_encuesta(encuesta_clonada)
-    print(f"\nEncuesta clonada correctamente: '{encuesta_clonada.titulo}' (ID: {encuesta_clonada.id})")
+    # 4. RF-04: Duplicar encuesta (Prototype)
+    encuesta_copia = encuesta_original.clone()
+    plataforma.registrar_encuesta(encuesta_copia)
+    print(f"\nEncuesta duplicada (Prototype): '{encuesta_copia.titulo}' (ID: {encuesta_copia.id})")
 
-    # 5. Simular respuestas
-    plataforma.guardar_respuesta(encuesta1.id, ["Excelente", 5, "Todo marcha excelente."])
-    plataforma.guardar_respuesta(encuesta1.id, ["Bueno", 4, "Más capacitación."])
-    plataforma.guardar_respuesta(encuesta1.id, ["Excelente", 4, "Sillas ergonómicas."])
+    # 5. RF-06: Registrar respuestas de participantes
+    plataforma.guardar_respuesta(encuesta_original.id, ["Excelente", "Incluir más patrones de diseño."])
+    plataforma.guardar_respuesta(encuesta_original.id, ["Excelente", "Más ejercicios prácticos."])
+    plataforma.guardar_respuesta(encuesta_original.id, ["Aceptable", "Profundizar en Python avanzado."])
 
-    # 6. Generar Reporte Analítico con Template Method (RF-08)
+    # 6. RF-07: Analizar resultados
+    from modelos.reporte import ReporteEstandar
     reporte = ReporteEstandar()
-    resultado_reporte = reporte.generar(encuesta1, plataforma.respuestas[encuesta1.id])
+    analisis = reporte.generar(encuesta_original, plataforma.respuestas[encuesta_original.id])
 
-    print("\n" + resultado_reporte)
+    print("\n" + analisis)
 
 
 if __name__ == "__main__":
