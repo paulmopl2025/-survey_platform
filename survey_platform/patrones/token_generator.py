@@ -2,7 +2,7 @@ import uuid
 
 
 class TokenGenerator:
-    """Patrón Singleton (RF-06): garantiza una única instancia para emitir tokens sin repetición."""
+    # Patrón Singleton (RF-06): garantiza una única instancia para emitir tokens sin repetición
 
     _instancia = None
 

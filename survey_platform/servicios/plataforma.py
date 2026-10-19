@@ -11,7 +11,7 @@ from patrones.token_generator import TokenGenerator
 
 
 class Plataforma:
-    """Gestiona las encuestas, respuestas y operaciones principales del sistema."""
+    # Gestiona las encuestas, respuestas y operaciones principales del sistema
 
     def __init__(self):
         self.encuestas = []
@@ -20,19 +20,6 @@ class Plataforma:
     def registrar(self, encuesta):
         self.encuestas.append(encuesta)
         return encuesta
-
-    def crear_desde_formato(self, formato, titulo, descripcion="", privacidad=PRIVACIDAD_ELIGE):
-        encuesta = (
-            EncuestaBuilder()
-            .set_titulo(titulo)
-            .set_descripcion(descripcion)
-            .set_privacidad(privacidad)
-            .build()
-        )
-        for pregunta in formato.crear_preguntas_base():
-            encuesta.agregar_pregunta(pregunta)
-        encuesta.reporte = formato.crear_reporte()
-        return self.registrar(encuesta)
 
     def duplicar(self, encuesta):
         return self.registrar(encuesta.clone())

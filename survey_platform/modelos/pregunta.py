@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 
 class Pregunta(ABC):
-    """Clase base abstracta para todos los tipos de pregunta."""
+    # Clase base abstracta para todos los tipos de pregunta
 
     def __init__(self, enunciado):
         if not enunciado or not enunciado.strip():
@@ -16,7 +16,7 @@ class Pregunta(ABC):
 
     @abstractmethod
     def validar_respuesta(self, entrada):
-        """Valida y transforma la respuesta ingresada por el participante."""
+        # Valida y transforma la respuesta ingresada por el participante
         pass
 
     def describir(self):
@@ -24,7 +24,7 @@ class Pregunta(ABC):
 
 
 class PreguntaConOpciones(Pregunta):
-    """Clase base para preguntas que requieren configurar mínimo 2 opciones (RF-03)."""
+    # Clase base para preguntas que requieren configurar mínimo 2 opciones (RF-03)
 
     def __init__(self, enunciado, opciones):
         super().__init__(enunciado)
@@ -53,6 +53,8 @@ class PreguntaSeleccionUnica(PreguntaConOpciones):
         return "Selección única"
 
     def validar_respuesta(self, entrada):
+        if "," in entrada:
+            raise ValueError("Escribe el número de una sola opción.")
         return self._opcion_por_numero(entrada)
 
 

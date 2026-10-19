@@ -9,7 +9,7 @@ from modelos.pregunta import (
 
 
 class PreguntaCreator(ABC):
-    """Patrón Factory Method (RF-02): creador abstracto de preguntas."""
+    # Patrón Factory Method (RF-02): creador abstracto de preguntas
 
     @abstractmethod
     def crear_pregunta(self, enunciado, opciones=None):
