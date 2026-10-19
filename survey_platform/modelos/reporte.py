@@ -6,7 +6,7 @@ from modelos.pregunta import PreguntaConOpciones, PreguntaEscala
 
 
 class ReporteAnalitico(ABC):
-    """Clase base para generar el análisis de resultados de una encuesta (RF-08)."""
+    # Clase base para generar el análisis de resultados de una encuesta (RF-08)
 
     titulo = "Reporte"
 
@@ -71,27 +71,9 @@ class ReporteAnalitico(ABC):
 
 
 class ReporteGeneral(ReporteAnalitico):
-    """Reporte estándar que adapta el cálculo según el tipo de pregunta."""
+    # Reporte estándar que adapta el cálculo según el tipo de pregunta
 
     titulo = "Reporte de resultados"
 
     def _analizar_escala(self, valores, total):
-        return self._calcular_estadisticas(valores)
-
-
-class ReporteSatisfaccion(ReporteAnalitico):
-    """Producto concreto de Abstract Factory para el formato Satisfacción."""
-
-    titulo = "Reporte de satisfacción"
-
-    def _analizar_escala(self, valores, total):
-        return self._calcular_estadisticas(valores) + self._distribucion_escala(valores, total)
-
-
-class ReporteOpinion(ReporteAnalitico):
-    """Producto concreto de Abstract Factory para el formato Opinión."""
-
-    titulo = "Reporte de opinión"
-
-    def _analizar_escala(self, valores, total):
-        return self._distribucion_escala(valores, total)
+        return self._calcular_estadisticas(valores)

@@ -9,7 +9,7 @@ PRIVACIDAD_NOMBRE = "nombre_obligatorio"
 
 
 class Encuesta:
-    """Representa una encuesta dentro de la plataforma e implementa Prototype."""
+    # Representa una encuesta dentro de la plataforma e implementa Prototype
 
     def __init__(self):
         self.id = uuid.uuid4().hex[:8]
@@ -28,7 +28,7 @@ class Encuesta:
         self.preguntas.append(pregunta)
 
     def clone(self):
-        """Patrón Prototype (RF-04): crea una copia profunda e independiente."""
+        # Patrón Prototype (RF-04): crea una copia profunda e independiente
         copia = copy.deepcopy(self)
         copia.id = uuid.uuid4().hex[:8]
         copia.titulo = "{} (copia)".format(self.titulo)

@@ -5,7 +5,6 @@ from modelos.encuesta import (
     PRIVACIDAD_NOMBRE,
 )
 from patrones.encuesta_builder import EncuestaBuilder
-from patrones.formato_factory import FORMATOS_DISPONIBLES
 from patrones.pregunta_creator import (
     CreadorEscala,
     CreadorOpcionMultiple,
@@ -16,7 +15,7 @@ from servicios.plataforma import Plataforma
 
 
 class MenuConsola:
-    """Gestiona la interfaz de usuario en consola bajo el paradigma orientado a objetos."""
+    # Gestiona la interfaz de usuario en consola bajo el paradigma orientado a objetos
 
     def __init__(self, plataforma):
         self.plataforma = plataforma
@@ -28,7 +27,6 @@ class MenuConsola:
         }
         self.opciones = [
             ("Crear encuesta", self.crear_encuesta),
-            ("Crear encuesta desde un formato", self.crear_desde_formato),
             ("Agregar preguntas", self.agregar_preguntas),
             ("Duplicar encuesta", self.duplicar_encuesta),
             ("Publicar encuesta", self.publicar_encuesta),
@@ -91,27 +89,6 @@ class MenuConsola:
         print("[Builder] Encuesta '{}' construida paso a paso. ID: {} | Estado: {}".format(
             encuesta.titulo, encuesta.id, encuesta.estado))
 
-    def crear_desde_formato(self):
-        print("Formatos disponibles:")
-        for i, formato in enumerate(FORMATOS_DISPONIBLES, 1):
-            print("  {}. {}".format(i, formato.nombre))
-        opcion = input("Elige un formato: ").strip()
-        if not (opcion.isdigit() and 1 <= int(opcion) <= len(FORMATOS_DISPONIBLES)):
-            print("Formato no válido.")
-            return
-        formato = FORMATOS_DISPONIBLES[int(opcion) - 1]
-        while True:
-            titulo = input("Título: ")
-            try:
-                encuesta = self.plataforma.crear_desde_formato(
-                    formato, titulo, privacidad=PRIVACIDAD_ELIGE
-                )
-                break
-            except ValueError as error:
-                print("  Error: {}".format(error))
-        print("[Abstract Factory] Formato {} creó la encuesta '{}' con {} pregunta(s) base y su reporte.".format(
-            formato.nombre, encuesta.titulo, len(encuesta.preguntas)))
-
     def agregar_preguntas(self):
         encuesta = self.elegir_encuesta(ESTADO_BORRADOR)
         if encuesta is None:
@@ -170,7 +147,9 @@ class MenuConsola:
         valores = []
         for i, pregunta in enumerate(encuesta.preguntas, 1):
             print("\nP{}. {}".format(i, pregunta.describir()))
-            if hasattr(pregunta, "opciones"):
+            if pregunta.tipo == "Selección única":
+                print("  (escribe el número de una sola opción)")
+            elif pregunta.tipo == "Opción múltiple":
                 print("  (escribe el número de la opción; si son varias, sepáralas con coma)")
             while True:
                 try:

@@ -2,7 +2,7 @@ from modelos.encuesta import PRIVACIDAD_ELIGE, PRIVACIDAD_NOMBRE, Encuesta
 
 
 class EncuestaBuilder:
-    """Patrón Builder (RF-01): construye una encuesta paso a paso."""
+    # Patrón Builder (RF-01): construye una encuesta paso a paso
 
     def __init__(self, creador="Admin"):
         self._creador = creador
