@@ -31,7 +31,7 @@ class Encuesta:
         # Patrón Prototype (RF-04): crea una copia profunda e independiente
         copia = copy.deepcopy(self)
         copia.id = uuid.uuid4().hex[:8]
-        copia.titulo = "{} (copia)".format(self.titulo)
+        copia.titulo = f"{self.titulo} (copia)"
         copia.estado = ESTADO_BORRADOR
         copia.token = None
         return copia
