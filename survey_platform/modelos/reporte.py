@@ -6,7 +6,7 @@ from modelos.pregunta import PreguntaConOpciones, PreguntaEscala
 
 
 class ReporteAnalitico(ABC):
-    # Clase base para generar el análisis de resultados de una encuesta (RF-08)
+    # Clase base para generar el análisis de resultados de una encuesta (RF-07)
 
     titulo = "Reporte"
 
@@ -76,4 +76,4 @@ class ReporteGeneral(ReporteAnalitico):
     titulo = "Reporte de resultados"
 
     def _analizar_escala(self, valores, total):
-        return self._calcular_estadisticas(valores)
+        return self._calcular_estadisticas(valores)
