@@ -24,7 +24,7 @@ Requiere Python 3.8 o superior y no tiene dependencias externas.
 
 ```bash
 git clone https://github.com/paulmopl2025/-survey_platform
-cd -survey_platform
+cd ./-survey_platform
 python survey_platform/main.py
 ```
 
