@@ -42,12 +42,13 @@ class ReporteAnalitico(ABC):
 
         for i, pregunta in enumerate(encuesta.preguntas):
             valores = [r.valores[i] for r in respuestas]
+            base = getattr(pregunta, "pregunta_base", pregunta)
             entrada = {
                 "numero": i + 1,
                 "enunciado": pregunta.enunciado,
                 "tipo": pregunta.tipo,
             }
-            if isinstance(pregunta, PreguntaConOpciones):
+            if isinstance(base, PreguntaConOpciones):
                 entrada["analisis"] = "opciones"
                 entrada["opciones"] = [
                     {
@@ -55,14 +56,18 @@ class ReporteAnalitico(ABC):
                         "cantidad": cantidad,
                         "porcentaje": round(cantidad * 100.0 / total, 1),
                     }
-                    for opcion, cantidad in self._contar_opciones(pregunta, valores)
+                    for opcion, cantidad in self._contar_opciones(base, valores)
                 ]
-            elif isinstance(pregunta, PreguntaEscala):
+            elif isinstance(base, PreguntaEscala):
                 entrada["analisis"] = "escala"
-                entrada["estadisticas"] = self._resumen_estadistico(valores)
+                validos = [v for v in valores if v is not None]
+                if validos:
+                    entrada["estadisticas"] = self._resumen_estadistico(validos)
+                else:
+                    entrada["estadisticas"] = {"media": None, "mediana": None, "moda": []}
             else:
                 entrada["analisis"] = "texto"
-                entrada["respuestas"] = list(valores)
+                entrada["respuestas"] = [v for v in valores if v is not None]
             datos["preguntas"].append(entrada)
         return datos
 
@@ -70,16 +75,25 @@ class ReporteAnalitico(ABC):
         # Se agrega esta funcion para reutilizar el conteo de opciones
         elegidas = []
         for v in valores:
+            if v is None:
+                continue
             elegidas.extend(v if isinstance(v, list) else [v])
         conteo = Counter(elegidas)
         return [(o, conteo.get(o, 0)) for o in pregunta.opciones]
 
     def _analizar_pregunta(self, pregunta, valores, total):
-        if isinstance(pregunta, PreguntaConOpciones):
-            return self._generar_barras(self._contar_opciones(pregunta, valores), total)
-        if isinstance(pregunta, PreguntaEscala):
-            return self._analizar_escala(valores, total)
-        return ["  * {}".format(v) for v in valores]
+        base = getattr(pregunta, "pregunta_base", pregunta)
+        if isinstance(base, PreguntaConOpciones):
+            return self._generar_barras(self._contar_opciones(base, valores), total)
+        if isinstance(base, PreguntaEscala):
+            validos = [v for v in valores if v is not None]
+            if not validos:
+                return ["  Sin respuestas registradas."]
+            return self._analizar_escala(validos, total)
+        validos = [v for v in valores if v is not None]
+        if not validos:
+            return ["  Sin respuestas registradas."]
+        return ["  * {}".format(v) for v in validos]
 
     def _generar_barras(self, conteos, total):
         ancho = max(len(etiqueta) for etiqueta, _ in conteos)

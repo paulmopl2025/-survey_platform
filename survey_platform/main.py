@@ -13,6 +13,7 @@ from patrones.pregunta_creator import (
     CreadorSeleccionUnica,
     CreadorTextoLibre,
 )
+from patrones.pregunta_decorator import ConAyuda, ConValidacion, Obligatoria
 from patrones.seccion_composite import Seccion
 from servicios.plataforma import Plataforma
 
@@ -156,6 +157,52 @@ class MenuConsola:
                 seccion.titulo))
         return True
 
+    def _aplicar_decoradores(self, pregunta):
+        # Se agrega esta funcion para envolver la pregunta con decoradores combinables
+        aplicados = []
+        while True:
+            resp = input("¿Es obligatoria? (s/n): ").strip().lower()
+            if resp in ("s", "si", "sí"):
+                pregunta = Obligatoria(pregunta)
+                aplicados.append("Obligatoria")
+                break
+            if resp in ("n", "no"):
+                break
+            print("  Responde 's' o 'n'.")
+
+        ayuda = input("Texto de ayuda (Enter para omitir): ").strip()
+        if ayuda:
+            pregunta = ConAyuda(pregunta, ayuda)
+            aplicados.append("ConAyuda")
+
+        if pregunta.tipo == "Texto libre":
+            while True:
+                minimo = input("Mínimo de caracteres (número o Enter para omitir): ").strip()
+                if not minimo:
+                    break
+                if minimo.isdigit() and int(minimo) > 0:
+                    pregunta = ConValidacion(pregunta, min_caracteres=int(minimo))
+                    aplicados.append("ConValidacion")
+                    break
+                print("  Escribe un número entero mayor a 0.")
+        elif pregunta.tipo == "Opción múltiple":
+            total_ops = len(pregunta.opciones)
+            while True:
+                minimo = input("Mínimo de opciones a elegir (1-{}, Enter para omitir): ".format(total_ops)).strip()
+                if not minimo:
+                    break
+                if minimo.isdigit() and 1 <= int(minimo) <= total_ops:
+                    pregunta = ConValidacion(pregunta, min_opciones=int(minimo))
+                    aplicados.append("ConValidacion")
+                    break
+                print("  Escribe un número entre 1 y {}.".format(total_ops))
+
+        if aplicados:
+            print("[Decorator] Comportamientos aplicados: {}.".format(", ".join(aplicados)))
+        else:
+            print("[Decorator] Pregunta configurada como opcional sin decoradores.")
+        return pregunta
+
     def _agregar_preguntas_en(self, encuesta, proxy, seccion=None):
         # Se agrega esta funcion para agregar preguntas en una seccion o directamente
         while True:
@@ -175,6 +222,13 @@ class MenuConsola:
                 opciones = input("Opciones separadas por coma (mínimo 2): ").split(",")
             try:
                 pregunta = creador.crear_pregunta(enunciado, opciones)
+            except ValueError as error:
+                print("  Error: {}".format(error))
+                continue
+            print("[Factory Method] {} creó una pregunta de tipo '{}'.".format(
+                type(creador).__name__, pregunta.tipo))
+            pregunta = self._aplicar_decoradores(pregunta)
+            try:
                 proxy.agregar_pregunta(pregunta, seccion)
             except PermissionError as error:
                 print("[Proxy] Acceso denegado: {}".format(error))
@@ -182,8 +236,6 @@ class MenuConsola:
             except ValueError as error:
                 print("  Error: {}".format(error))
                 continue
-            print("[Factory Method] {} creó una pregunta de tipo '{}'.".format(
-                type(creador).__name__, pregunta.tipo))
             if seccion is not None:
                 print("[Composite] Pregunta agregada a la sección '{}' (ahora tiene {} pregunta(s)).".format(
                     seccion.titulo, seccion.contar_directas()))
@@ -276,6 +328,8 @@ class MenuConsola:
                     print("  (escribe el número de una sola opción)")
                 elif elemento.tipo == "Opción múltiple":
                     print("  (escribe el número de la opción; si son varias, sepáralas con coma)")
+                if not getattr(elemento, "es_obligatoria", False):
+                    print("  (opcional, presiona Enter para omitir)")
                 print()
                 while True:
                     try:

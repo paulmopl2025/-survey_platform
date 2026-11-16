@@ -16,6 +16,11 @@ class Pregunta(ElementoEncuesta):
     def tipo(self):
         pass
 
+    @property
+    def es_obligatoria(self):
+        # Se agrega esta propiedad para consultar si la pregunta es obligatoria
+        return False
+
     @abstractmethod
     def validar_respuesta(self, entrada):
         # Valida y transforma la respuesta ingresada por el participante
@@ -70,6 +75,8 @@ class PreguntaSeleccionUnica(PreguntaConOpciones):
         return "Selección única"
 
     def validar_respuesta(self, entrada):
+        if not entrada or not entrada.strip():
+            return None
         if "," in entrada:
             raise ValueError("Escribe el número de una sola opción.")
         return self._opcion_por_numero(entrada)
@@ -81,8 +88,8 @@ class PreguntaOpcionMultiple(PreguntaConOpciones):
         return "Opción múltiple"
 
     def validar_respuesta(self, entrada):
-        if not entrada.strip():
-            raise ValueError("Elige al menos una opción (separadas por coma).")
+        if not entrada or not entrada.strip():
+            return None
         elegidas = []
         for parte in entrada.split(","):
             opcion = self._opcion_por_numero(parte)
@@ -100,6 +107,8 @@ class PreguntaEscala(Pregunta):
         return "Escala {}-{}".format(self.MINIMO, self.MAXIMO)
 
     def validar_respuesta(self, entrada):
+        if not entrada or not entrada.strip():
+            return None
         try:
             valor = int(entrada.strip())
         except ValueError:
@@ -115,6 +124,6 @@ class PreguntaTextoLibre(Pregunta):
         return "Texto libre"
 
     def validar_respuesta(self, entrada):
-        if not entrada.strip():
-            raise ValueError("Escribe una respuesta.")
+        if not entrada or not entrada.strip():
+            return None
         return entrada.strip()
