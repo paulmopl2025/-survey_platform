@@ -405,7 +405,10 @@ class MenuConsola:
             print(contenido)
 
     def cambiar_usuario(self):
-        self.usuario_actual = self.pedir_obligatorio("Nombre del usuario: ")
+        nuevo = input("Nombre del usuario (Enter para volver al menú): ").strip()
+        if not nuevo:
+            return
+        self.usuario_actual = nuevo
         print("Ahora estás usando la plataforma como '{}'.".format(self.usuario_actual))
 
     def ejecutar(self):
