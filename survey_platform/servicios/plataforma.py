@@ -31,6 +31,7 @@ class Plataforma:
             raise ValueError("No se puede publicar una encuesta sin título.")
         if not encuesta.preguntas:
             raise ValueError("No se puede publicar: agrega al menos una pregunta.")
+        encuesta.validar_estructura()
         encuesta.estado = ESTADO_PUBLICADA
         encuesta.token = TokenGenerator().generar_token()
         return encuesta.token
