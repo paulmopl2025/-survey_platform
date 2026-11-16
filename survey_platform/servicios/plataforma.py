@@ -67,8 +67,9 @@ class Plataforma:
         return self._respuestas.get(encuesta.id, [])
 
     def analizar(self, encuesta):
-        reporte = encuesta.reporte or ReporteGeneral()
-        return reporte.generar(encuesta, self.respuestas_de(encuesta))
+    reporte = encuesta.reporte or ReporteGeneral()
+    reporte = ReporteConFecha(reporte)
+    return reporte.generar(encuesta, self.respuestas_de(encuesta))
 
     def exportar_reporte(self, encuesta, exportador):
         # Se agrega esta funcion para exportar el reporte usando el patron adapter
