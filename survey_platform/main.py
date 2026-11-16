@@ -5,6 +5,7 @@ from modelos.encuesta import (
     PRIVACIDAD_NOMBRE,
 )
 from patrones.encuesta_builder import EncuestaBuilder
+from patrones.exportador_adapter import ExportadorCSV, ExportadorJSON
 from patrones.pregunta_creator import (
     CreadorEscala,
     CreadorOpcionMultiple,
@@ -24,6 +25,11 @@ class MenuConsola:
             "2": ("Opción múltiple", CreadorOpcionMultiple(), True),
             "3": ("Escala 1-5", CreadorEscala(), False),
             "4": ("Texto libre", CreadorTextoLibre(), False),
+        }
+        # Se agrega el mapeo de exportadores para el patron adapter
+        self.exportadores = {
+            "1": ("CSV", ExportadorCSV),
+            "2": ("JSON", ExportadorJSON),
         }
         self.opciones = [
             ("Crear encuesta", self.crear_encuesta),
@@ -179,6 +185,26 @@ class MenuConsola:
             return
         print()
         print(self.plataforma.analizar(encuesta))
+        self._exportar_resultados(encuesta)
+
+    def _exportar_resultados(self, encuesta):
+        # Se agrega esta funcion para exportar resultados con el patron adapter
+        while True:
+            print("\n¿Deseas exportar este reporte? (Enter para volver al menú)")
+            for clave, (nombre, _) in self.exportadores.items():
+                print("  {}. Exportar a {}".format(clave, nombre))
+            opcion = input("Elige: ").strip()
+            if not opcion:
+                return
+            if opcion not in self.exportadores:
+                print("  Opción no válida.")
+                continue
+            nombre, clase_exportador = self.exportadores[opcion]
+            exportador = clase_exportador(encuesta.reporte)
+            contenido = self.plataforma.exportar_reporte(encuesta, exportador)
+            print("\n[Adapter] {} generó la salida en formato {}:".format(
+                type(exportador).__name__, nombre))
+            print(contenido)
 
     def ejecutar(self):
         while True:

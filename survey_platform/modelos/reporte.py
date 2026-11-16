@@ -27,13 +27,56 @@ class ReporteAnalitico(ABC):
             lineas.extend(self._analizar_pregunta(pregunta, valores, total))
         return "\n".join(lineas)
 
+    def construir_datos(self, encuesta, respuestas):
+        # Se agrega esta funcion para exponer los datos del reporte al adaptador
+        total = len(respuestas)
+        datos = {
+            "encuesta_id": encuesta.id,
+            "titulo": encuesta.titulo,
+            "reporte": self.titulo,
+            "total_participantes": total,
+            "preguntas": [],
+        }
+        if total == 0:
+            return datos
+
+        for i, pregunta in enumerate(encuesta.preguntas):
+            valores = [r.valores[i] for r in respuestas]
+            entrada = {
+                "numero": i + 1,
+                "enunciado": pregunta.enunciado,
+                "tipo": pregunta.tipo,
+            }
+            if isinstance(pregunta, PreguntaConOpciones):
+                entrada["analisis"] = "opciones"
+                entrada["opciones"] = [
+                    {
+                        "opcion": opcion,
+                        "cantidad": cantidad,
+                        "porcentaje": round(cantidad * 100.0 / total, 1),
+                    }
+                    for opcion, cantidad in self._contar_opciones(pregunta, valores)
+                ]
+            elif isinstance(pregunta, PreguntaEscala):
+                entrada["analisis"] = "escala"
+                entrada["estadisticas"] = self._resumen_estadistico(valores)
+            else:
+                entrada["analisis"] = "texto"
+                entrada["respuestas"] = list(valores)
+            datos["preguntas"].append(entrada)
+        return datos
+
+    def _contar_opciones(self, pregunta, valores):
+        # Se agrega esta funcion para reutilizar el conteo de opciones
+        elegidas = []
+        for v in valores:
+            elegidas.extend(v if isinstance(v, list) else [v])
+        conteo = Counter(elegidas)
+        return [(o, conteo.get(o, 0)) for o in pregunta.opciones]
+
     def _analizar_pregunta(self, pregunta, valores, total):
         if isinstance(pregunta, PreguntaConOpciones):
-            elegidas = []
-            for v in valores:
-                elegidas.extend(v if isinstance(v, list) else [v])
-            conteo = Counter(elegidas)
-            return self._generar_barras([(o, conteo.get(o, 0)) for o in pregunta.opciones], total)
+            return self._generar_barras(self._contar_opciones(pregunta, valores), total)
         if isinstance(pregunta, PreguntaEscala):
             return self._analizar_escala(valores, total)
         return ["  * {}".format(v) for v in valores]
@@ -48,16 +91,25 @@ class ReporteAnalitico(ABC):
                 etiqueta, barra, cantidad, porcentaje, w=ancho))
         return lineas
 
-    def _calcular_estadisticas(self, valores):
+    def _resumen_estadistico(self, valores):
+        # Se agrega esta funcion para reutilizar los calculos estadisticos
         media = statistics.mean(valores)
         mediana = statistics.median(valores)
         conteo = Counter(valores)
         mayor = max(conteo.values())
         moda = sorted(v for v, c in conteo.items() if c == mayor)
+        return {
+            "media": round(media, 2),
+            "mediana": mediana,
+            "moda": moda,
+        }
+
+    def _calcular_estadisticas(self, valores):
+        resumen = self._resumen_estadistico(valores)
         return [
-            "  Media:   {:g}".format(round(media, 2)),
-            "  Mediana: {:g}".format(mediana),
-            "  Moda:    {}".format(", ".join(str(m) for m in moda)),
+            "  Media:   {:g}".format(resumen["media"]),
+            "  Mediana: {:g}".format(resumen["mediana"]),
+            "  Moda:    {}".format(", ".join(str(m) for m in resumen["moda"])),
         ]
 
     def _distribucion_escala(self, valores, total):
