@@ -10,6 +10,7 @@ El sistema está estructurado modularmente para resolver problemas comunes en el
 - **Factory Method (`patrones/pregunta_creator.py`):** Delega la creación de los distintos tipos de preguntas (selección única, opción múltiple, texto libre y escala 1–5) a creadores específicos, facilitando la incorporación de nuevos tipos en el futuro.
 - **Prototype (`modelos/encuesta.py`):** Implementa la clonación profunda (*deep copy*) de encuestas existentes con todas sus preguntas y opciones asociadas, garantizando copias totalmente independientes de la original.
 - **Singleton (`patrones/token_generator.py`):** Centraliza la generación de tokens únicos para las encuestas publicadas, asegurando una única instancia global para evitar duplicados en los enlaces.
+- **Proxy (`patrones/encuesta_proxy.py`):** `EncuestaProxy` es un proxy de protección que se interpone entre el menú y la encuesta real. Solo deja pasar al creador de la encuesta para modificarla (agregar preguntas), publicarla y analizar o exportar sus resultados; a cualquier otro usuario le niega el acceso. Desde el menú se puede usar la opción "Cambiar usuario" para probarlo.
 
 ### 📁 Estructura del proyecto
 

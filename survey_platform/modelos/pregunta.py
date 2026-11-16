@@ -1,7 +1,9 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
+
+from patrones.seccion_composite import ElementoEncuesta
 
 
-class Pregunta(ABC):
+class Pregunta(ElementoEncuesta):
     # Clase base abstracta para todos los tipos de pregunta
 
     def __init__(self, enunciado):
@@ -21,6 +23,21 @@ class Pregunta(ABC):
 
     def describir(self):
         return "[{}] {}".format(self.tipo, self.enunciado)
+
+    def mostrar(self, nivel=0):
+        # Se agrega esta funcion como hoja del patron composite
+        return "{}{}".format("  " * nivel, self.describir())
+
+    def contar(self):
+        return 1
+
+    def obtener_preguntas(self):
+        return [self]
+
+    def validar(self):
+        if not self.enunciado or not self.enunciado.strip():
+            raise ValueError("La pregunta necesita un enunciado.")
+        return True
 
 
 class PreguntaConOpciones(Pregunta):
