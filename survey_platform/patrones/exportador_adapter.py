@@ -4,7 +4,7 @@ import json
 from abc import ABC, abstractmethod
 
 from modelos.reporte import ReporteGeneral
-
+from patrones.reporte_decorator import ReporteConFecha
 
 class ExportadorReporte(ABC):
     # Se agrega el patron adapter para exportar reportes a distintos formatos
@@ -14,6 +14,7 @@ class ExportadorReporte(ABC):
 
     def _obtener_datos(self, encuesta, respuestas):
         reporte = self._reporte or encuesta.reporte or ReporteGeneral()
+        reporte = ReporteConFecha(reporte)
         return reporte.construir_datos(encuesta, respuestas)
 
     @abstractmethod
@@ -37,6 +38,7 @@ class ExportadorCSV(ExportadorReporte):
             "detalle",
             "valor",
             "porcentaje",
+            "fecha_generacion",
         ])
 
         if datos["total_participantes"] == 0:
@@ -49,6 +51,7 @@ class ExportadorCSV(ExportadorReporte):
                 "Sin respuestas",
                 "",
                 "",
+                datos["fecha_generacion"],
             ])
             return buffer.getvalue().rstrip("\n")
 
