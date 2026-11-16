@@ -8,7 +8,7 @@ from modelos.reporte import ReporteGeneral
 from modelos.respuesta import RespuestaEncuesta
 from patrones.encuesta_builder import EncuestaBuilder
 from patrones.token_generator import TokenGenerator
-
+from patrones.reporte_decorator import ReporteConFecha
 
 class Plataforma:
     # Gestiona las encuestas, respuestas y operaciones principales del sistema
