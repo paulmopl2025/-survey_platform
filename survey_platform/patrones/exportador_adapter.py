@@ -73,8 +73,8 @@ class ExportadorCSV(ExportadorReporte):
         ])
             elif pregunta["analisis"] == "escala":
                 est = pregunta["estadisticas"]
-                escritor.writerow(base + ["Media", est["media"], ""])
-                escritor.writerow(base + ["Mediana", est["mediana"], ""])
+                escritor.writerow(base + ["Media", est["media"], "", datos["fecha_generacion"]])
+                escritor.writerow(base + ["Mediana", est["mediana"], "", datos["fecha_generacion"]])
                 escritor.writerow(base + [
                     "Moda",
                     ", ".join(str(m) for m in est["moda"]),
