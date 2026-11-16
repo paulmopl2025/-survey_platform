@@ -69,7 +69,8 @@ class ExportadorCSV(ExportadorReporte):
                         item["opcion"],
                         item["cantidad"],
                         "{:.1f}%".format(item["porcentaje"]),
-                    ])
+                        datos["fecha_generacion"],
+        ])
             elif pregunta["analisis"] == "escala":
                 est = pregunta["estadisticas"]
                 escritor.writerow(base + ["Media", est["media"], ""])
