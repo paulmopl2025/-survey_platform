@@ -5,7 +5,11 @@ class GestionEncuesta(ABC):
     # Patrón Proxy: interfaz común (Sujeto) para las operaciones protegidas de una encuesta
 
     @abstractmethod
-    def agregar_pregunta(self, pregunta):
+    def agregar_seccion(self, seccion, padre=None):
+        pass
+
+    @abstractmethod
+    def agregar_pregunta(self, pregunta, seccion=None):
         pass
 
     @abstractmethod
@@ -28,8 +32,11 @@ class EncuestaReal(GestionEncuesta):
         self._encuesta = encuesta
         self._plataforma = plataforma
 
-    def agregar_pregunta(self, pregunta):
-        self._encuesta.agregar_pregunta(pregunta)
+    def agregar_seccion(self, seccion, padre=None):
+        self._encuesta.agregar_seccion(seccion, padre)
+
+    def agregar_pregunta(self, pregunta, seccion=None):
+        self._encuesta.agregar_pregunta(pregunta, seccion)
 
     def publicar(self):
         return self._plataforma.publicar(self._encuesta)
@@ -63,9 +70,14 @@ class EncuestaProxy(GestionEncuesta):
                 "'{}' no puede {} la encuesta '{}': solo su creador ('{}') tiene permiso.".format(
                     self._usuario, accion, self._encuesta.titulo, self._encuesta.creador))
 
-    def agregar_pregunta(self, pregunta):
+    def agregar_seccion(self, seccion, padre=None):
+        # Se agrega esta funcion para proteger la creacion de secciones con proxy
         self.verificar_acceso("modificar")
-        self._real.agregar_pregunta(pregunta)
+        self._real.agregar_seccion(seccion, padre)
+
+    def agregar_pregunta(self, pregunta, seccion=None):
+        self.verificar_acceso("modificar")
+        self._real.agregar_pregunta(pregunta, seccion)
 
     def publicar(self):
         self.verificar_acceso("publicar")

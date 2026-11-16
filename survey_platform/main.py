@@ -13,6 +13,7 @@ from patrones.pregunta_creator import (
     CreadorSeleccionUnica,
     CreadorTextoLibre,
 )
+from patrones.seccion_composite import Seccion
 from servicios.plataforma import Plataforma
 
 
@@ -74,8 +75,8 @@ class MenuConsola:
             print("No hay encuestas{} para esta opción.".format(detalle))
             return None
         for i, e in enumerate(candidatas, 1):
-            print("  {}. {} [{}] - {} pregunta(s) - creador: {}".format(
-                i, e.titulo, e.estado, len(e.preguntas), e.creador))
+            print("  {}. {} [{}] - {} sección(es), {} pregunta(s) - creador: {}".format(
+                i, e.titulo, e.estado, len(e.secciones), e.contar_preguntas(), e.creador))
         entrada = input("Elige una encuesta (Enter para cancelar): ").strip()
         if not entrada:
             return None
@@ -107,6 +108,88 @@ class MenuConsola:
         print("[Builder] Encuesta '{}' construida paso a paso. ID: {} | Estado: {}".format(
             encuesta.titulo, encuesta.id, encuesta.estado))
 
+    def _elegir_seccion(self, encuesta, mensaje, permitir_enter=False):
+        # Se agrega esta funcion para seleccionar una seccion de la encuesta
+        secciones = encuesta.obtener_secciones_con_nivel()
+        if not secciones:
+            return None
+        for i, (seccion, nivel) in enumerate(secciones, 1):
+            sangria = "  " * nivel
+            print("  {}. {}{} ({} pregunta(s))".format(
+                i, sangria, seccion.titulo, seccion.contar_directas()))
+        entrada = input(mensaje).strip()
+        if not entrada:
+            return None if permitir_enter else False
+        if entrada.isdigit() and 1 <= int(entrada) <= len(secciones):
+            return secciones[int(entrada) - 1][0]
+        print("  Opción no válida.")
+        return False
+
+    def _crear_seccion(self, encuesta, proxy):
+        # Se agrega esta funcion para crear secciones y subsecciones con composite
+        padre = None
+        if encuesta.secciones:
+            print("\nSecciones existentes (elige un número para crear una subsección dentro):")
+            seleccion = self._elegir_seccion(
+                encuesta,
+                "¿Dentro de qué sección va? (número para subsección, o Enter para crear una nueva sección): ",
+                permitir_enter=True,
+            )
+            if seleccion is False:
+                return
+            padre = seleccion
+        titulo = input("Nombre de la sección: ")
+        try:
+            seccion = Seccion(titulo)
+            proxy.agregar_seccion(seccion, padre)
+        except PermissionError as error:
+            print("[Proxy] Acceso denegado: {}".format(error))
+            return False
+        except ValueError as error:
+            print("  Error: {}".format(error))
+            return True
+        if padre is not None:
+            print("[Composite] Subsección '{}' agregada dentro de '{}'.".format(
+                seccion.titulo, padre.titulo))
+        else:
+            print("[Composite] Sección '{}' agregada como sección principal.".format(
+                seccion.titulo))
+        return True
+
+    def _agregar_preguntas_en(self, encuesta, proxy, seccion=None):
+        # Se agrega esta funcion para agregar preguntas en una seccion o directamente
+        while True:
+            print("\nTipo de pregunta (Enter para volver):")
+            for clave, (nombre, _, _) in self.tipos_de_pregunta.items():
+                print("  {}. {}".format(clave, nombre))
+            clave = input("Elige: ").strip()
+            if not clave:
+                return True
+            if clave not in self.tipos_de_pregunta:
+                print("  Opción no válida.")
+                continue
+            nombre, creador, lleva_opciones = self.tipos_de_pregunta[clave]
+            enunciado = input("Enunciado: ")
+            opciones = None
+            if lleva_opciones:
+                opciones = input("Opciones separadas por coma (mínimo 2): ").split(",")
+            try:
+                pregunta = creador.crear_pregunta(enunciado, opciones)
+                proxy.agregar_pregunta(pregunta, seccion)
+            except PermissionError as error:
+                print("[Proxy] Acceso denegado: {}".format(error))
+                return False
+            except ValueError as error:
+                print("  Error: {}".format(error))
+                continue
+            print("[Factory Method] {} creó una pregunta de tipo '{}'.".format(
+                type(creador).__name__, pregunta.tipo))
+            if seccion is not None:
+                print("[Composite] Pregunta agregada a la sección '{}' (ahora tiene {} pregunta(s)).".format(
+                    seccion.titulo, seccion.contar_directas()))
+            else:
+                print("  La encuesta ya tiene {} pregunta(s).".format(encuesta.contar_preguntas()))
+
     def agregar_preguntas(self):
         encuesta = self.elegir_encuesta(ESTADO_BORRADOR)
         if encuesta is None:
@@ -119,31 +202,41 @@ class MenuConsola:
             print("[Proxy] Acceso denegado: {}".format(error))
             return
         while True:
-            print("\nTipo de pregunta (Enter para terminar):")
-            for clave, (nombre, _, _) in self.tipos_de_pregunta.items():
-                print("  {}. {}".format(clave, nombre))
-            clave = input("Elige: ").strip()
-            if not clave:
+            print("\nEstructura actual de '{}' ({} pregunta(s)):".format(
+                encuesta.titulo, encuesta.contar_preguntas()))
+            if encuesta.elementos:
+                print(encuesta.mostrar_estructura())
+            else:
+                print("  (Sin secciones ni preguntas todavía)")
+            print("\n¿Qué deseas hacer? (Enter para terminar):")
+            print("  1. Crear sección")
+            print("  2. Agregar pregunta a una sección")
+            print("  3. Agregar pregunta sin sección")
+            accion = input("Elige: ").strip()
+            if not accion:
                 return
-            if clave not in self.tipos_de_pregunta:
+            if accion == "1":
+                if self._crear_seccion(encuesta, proxy) is False:
+                    return
+            elif accion == "2":
+                if not encuesta.secciones:
+                    print("  Primero crea una sección.")
+                    continue
+                print("\nSecciones disponibles:")
+                seccion = self._elegir_seccion(
+                    encuesta,
+                    "Elige una sección (Enter para cancelar): ",
+                    permitir_enter=True,
+                )
+                if seccion is False or seccion is None:
+                    continue
+                if self._agregar_preguntas_en(encuesta, proxy, seccion) is False:
+                    return
+            elif accion == "3":
+                if self._agregar_preguntas_en(encuesta, proxy, None) is False:
+                    return
+            else:
                 print("  Opción no válida.")
-                continue
-            nombre, creador, lleva_opciones = self.tipos_de_pregunta[clave]
-            enunciado = input("Enunciado: ")
-            opciones = None
-            if lleva_opciones:
-                opciones = input("Opciones separadas por coma (mínimo 2): ").split(",")
-            try:
-                pregunta = creador.crear_pregunta(enunciado, opciones)
-                proxy.agregar_pregunta(pregunta)
-            except PermissionError as error:
-                print("[Proxy] Acceso denegado: {}".format(error))
-                return
-            except ValueError as error:
-                print("  Error: {}".format(error))
-                continue
-            print("[Factory Method] {} creó una pregunta de tipo '{}'. La encuesta ya tiene {}.".format(
-                type(creador).__name__, pregunta.tipo, len(encuesta.preguntas)))
 
     def duplicar_encuesta(self):
         original = self.elegir_encuesta()
@@ -167,6 +260,32 @@ class MenuConsola:
             return
         print("[Singleton] Encuesta publicada. Token de acceso (enlace) único: {}".format(token))
 
+    def _responder_elementos(self, elementos, valores, numero=1, nivel=0):
+        # Se agrega esta funcion para mostrar secciones y preguntas usando composite
+        sangria = "  " * nivel
+        for elemento in elementos:
+            if isinstance(elemento, Seccion):
+                etiqueta = "Subsección" if nivel > 0 else "Sección"
+                print("\n{}{}: {} ({} pregunta(s)):".format(
+                    sangria, etiqueta, elemento.titulo, elemento.contar_directas()))
+                numero = self._responder_elementos(
+                    elemento.elementos, valores, numero, nivel + 1)
+            else:
+                print("\nP{}. {}".format(numero, elemento.describir()))
+                if elemento.tipo == "Selección única":
+                    print("  (escribe el número de una sola opción)")
+                elif elemento.tipo == "Opción múltiple":
+                    print("  (escribe el número de la opción; si son varias, sepáralas con coma)")
+                print()
+                while True:
+                    try:
+                        valores.append(elemento.validar_respuesta(input("Tu respuesta: ")))
+                        break
+                    except ValueError as error:
+                        print("  {}".format(error))
+                numero += 1
+        return numero
+
     def responder_encuesta(self):
         token = input("Token de la encuesta (el enlace que recibiste): ").strip()
         encuesta = self.plataforma.buscar_por_token(token)
@@ -176,18 +295,8 @@ class MenuConsola:
 
         print("\n{}\n{}".format(encuesta.titulo, encuesta.descripcion))
         valores = []
-        for i, pregunta in enumerate(encuesta.preguntas, 1):
-            print("\nP{}. {}".format(i, pregunta.describir()))
-            if pregunta.tipo == "Selección única":
-                print("  (escribe el número de una sola opción)")
-            elif pregunta.tipo == "Opción múltiple":
-                print("  (escribe el número de la opción; si son varias, sepáralas con coma)")
-            while True:
-                try:
-                    valores.append(pregunta.validar_respuesta(input("Tu respuesta: ")))
-                    break
-                except ValueError as error:
-                    print("  {}".format(error))
+        self._responder_elementos(encuesta.elementos, valores)
+        print()
 
         nombre = None
         anonimo = False
