@@ -5,6 +5,7 @@ from modelos.encuesta import (
     PRIVACIDAD_NOMBRE,
 )
 from patrones.encuesta_builder import EncuestaBuilder
+from patrones.encuesta_proxy import EncuestaProxy
 from patrones.exportador_adapter import ExportadorCSV, ExportadorJSON
 from patrones.pregunta_creator import (
     CreadorEscala,
@@ -20,6 +21,8 @@ class MenuConsola:
 
     def __init__(self, plataforma):
         self.plataforma = plataforma
+        # Usuario que está usando la consola; el Proxy lo compara con el creador de la encuesta
+        self.usuario_actual = "Admin"
         self.tipos_de_pregunta = {
             "1": ("Selección única", CreadorSeleccionUnica(), True),
             "2": ("Opción múltiple", CreadorOpcionMultiple(), True),
@@ -38,6 +41,7 @@ class MenuConsola:
             ("Publicar encuesta", self.publicar_encuesta),
             ("Responder encuesta", self.responder_encuesta),
             ("Analizar resultados", self.analizar_resultados),
+            ("Cambiar usuario", self.cambiar_usuario),
         ]
 
     #Ayuda para pedir datos
@@ -70,7 +74,8 @@ class MenuConsola:
             print("No hay encuestas{} para esta opción.".format(detalle))
             return None
         for i, e in enumerate(candidatas, 1):
-            print("  {}. {} [{}] - {} pregunta(s)".format(i, e.titulo, e.estado, len(e.preguntas)))
+            print("  {}. {} [{}] - {} pregunta(s) - creador: {}".format(
+                i, e.titulo, e.estado, len(e.preguntas), e.creador))
         entrada = input("Elige una encuesta (Enter para cancelar): ").strip()
         if not entrada:
             return None
@@ -79,10 +84,17 @@ class MenuConsola:
         print("Opción no válida.")
         return None
 
+    def obtener_proxy(self, encuesta):
+        # Patrón Proxy: todas las operaciones protegidas pasan por EncuestaProxy
+        proxy = EncuestaProxy(encuesta, self.plataforma, self.usuario_actual)
+        if proxy.tiene_acceso():
+            print("[Proxy] Acceso permitido: '{}' es el creador de la encuesta.".format(proxy.usuario))
+        return proxy
+
     #Opciones del menú
 
     def crear_encuesta(self):
-        builder = EncuestaBuilder(creador="Admin")
+        builder = EncuestaBuilder(creador=self.usuario_actual)
         while True:
             try:
                 builder.set_titulo(input("Título: "))
@@ -98,6 +110,13 @@ class MenuConsola:
     def agregar_preguntas(self):
         encuesta = self.elegir_encuesta(ESTADO_BORRADOR)
         if encuesta is None:
+            return
+        proxy = self.obtener_proxy(encuesta)
+        try:
+            # Se valida antes de pedir las preguntas para no hacer escribir al usuario en vano
+            proxy.verificar_acceso("modificar")
+        except PermissionError as error:
+            print("[Proxy] Acceso denegado: {}".format(error))
             return
         while True:
             print("\nTipo de pregunta (Enter para terminar):")
@@ -116,7 +135,10 @@ class MenuConsola:
                 opciones = input("Opciones separadas por coma (mínimo 2): ").split(",")
             try:
                 pregunta = creador.crear_pregunta(enunciado, opciones)
-                encuesta.agregar_pregunta(pregunta)
+                proxy.agregar_pregunta(pregunta)
+            except PermissionError as error:
+                print("[Proxy] Acceso denegado: {}".format(error))
+                return
             except ValueError as error:
                 print("  Error: {}".format(error))
                 continue
@@ -136,7 +158,10 @@ class MenuConsola:
         if encuesta is None:
             return
         try:
-            token = self.plataforma.publicar(encuesta)
+            token = self.obtener_proxy(encuesta).publicar()
+        except PermissionError as error:
+            print("[Proxy] Acceso denegado: {}".format(error))
+            return
         except ValueError as error:
             print("  Error: {}".format(error))
             return
@@ -183,11 +208,17 @@ class MenuConsola:
         encuesta = self.elegir_encuesta(ESTADO_PUBLICADA)
         if encuesta is None:
             return
+        proxy = self.obtener_proxy(encuesta)
+        try:
+            reporte = proxy.analizar()
+        except PermissionError as error:
+            print("[Proxy] Acceso denegado: {}".format(error))
+            return
         print()
-        print(self.plataforma.analizar(encuesta))
-        self._exportar_resultados(encuesta)
+        print(reporte)
+        self._exportar_resultados(encuesta, proxy)
 
-    def _exportar_resultados(self, encuesta):
+    def _exportar_resultados(self, encuesta, proxy):
         # Se agrega esta funcion para exportar resultados con el patron adapter
         while True:
             print("\n¿Deseas exportar este reporte? (Enter para volver al menú)")
@@ -201,14 +232,22 @@ class MenuConsola:
                 continue
             nombre, clase_exportador = self.exportadores[opcion]
             exportador = clase_exportador(encuesta.reporte)
-            contenido = self.plataforma.exportar_reporte(encuesta, exportador)
+            try:
+                contenido = proxy.exportar_reporte(exportador)
+            except PermissionError as error:
+                print("[Proxy] Acceso denegado: {}".format(error))
+                return
             print("\n[Adapter] {} generó la salida en formato {}:".format(
                 type(exportador).__name__, nombre))
             print(contenido)
 
+    def cambiar_usuario(self):
+        self.usuario_actual = self.pedir_obligatorio("Nombre del usuario: ")
+        print("Ahora estás usando la plataforma como '{}'.".format(self.usuario_actual))
+
     def ejecutar(self):
         while True:
-            print("\nPLATAFORMA DE ENCUESTAS")
+            print("\nPLATAFORMA DE ENCUESTAS (usuario: {})".format(self.usuario_actual))
             for i, (nombre, _) in enumerate(self.opciones, 1):
                 print("{}. {}".format(i, nombre))
             print("{}. Salir".format(len(self.opciones) + 1))
