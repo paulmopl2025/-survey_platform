@@ -79,6 +79,7 @@ class ExportadorCSV(ExportadorReporte):
                     "Moda",
                     ", ".join(str(m) for m in est["moda"]),
                     "",
+                    datos["fecha_generacion"],
                 ])
             else:
                 for respuesta_texto in pregunta["respuestas"]:
