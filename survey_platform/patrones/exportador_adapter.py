@@ -83,7 +83,12 @@ class ExportadorCSV(ExportadorReporte):
                 ])
             else:
                 for respuesta_texto in pregunta["respuestas"]:
-                    escritor.writerow(base + ["Respuesta", respuesta_texto, ""])
+                    escritor.writerow(base + [
+                    "Respuesta",
+                    respuesta_texto,
+                    "",
+                    datos["fecha_generacion"],
+        ])
 
         return buffer.getvalue().rstrip("\n")
 
