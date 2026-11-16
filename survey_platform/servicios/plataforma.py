@@ -8,7 +8,7 @@ from modelos.reporte import ReporteGeneral
 from modelos.respuesta import RespuestaEncuesta
 from patrones.encuesta_builder import EncuestaBuilder
 from patrones.token_generator import TokenGenerator
-from patrones.reporte_decorator import ReporteConFecha
+
 
 class Plataforma:
     # Gestiona las encuestas, respuestas y operaciones principales del sistema
@@ -69,7 +69,6 @@ class Plataforma:
 
     def analizar(self, encuesta):
         reporte = encuesta.reporte or ReporteGeneral()
-        reporte = ReporteConFecha(reporte)
         return reporte.generar(encuesta, self.respuestas_de(encuesta))
 
     def exportar_reporte(self, encuesta, exportador):

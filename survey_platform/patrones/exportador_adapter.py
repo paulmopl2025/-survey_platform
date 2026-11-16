@@ -4,7 +4,7 @@ import json
 from abc import ABC, abstractmethod
 
 from modelos.reporte import ReporteGeneral
-from patrones.reporte_decorator import ReporteConFecha
+
 
 class ExportadorReporte(ABC):
     # Se agrega el patron adapter para exportar reportes a distintos formatos
@@ -14,7 +14,6 @@ class ExportadorReporte(ABC):
 
     def _obtener_datos(self, encuesta, respuestas):
         reporte = self._reporte or encuesta.reporte or ReporteGeneral()
-        reporte = ReporteConFecha(reporte)
         return reporte.construir_datos(encuesta, respuestas)
 
     @abstractmethod
@@ -38,7 +37,6 @@ class ExportadorCSV(ExportadorReporte):
             "detalle",
             "valor",
             "porcentaje",
-            "fecha_generacion",
         ])
 
         if datos["total_participantes"] == 0:
@@ -51,7 +49,6 @@ class ExportadorCSV(ExportadorReporte):
                 "Sin respuestas",
                 "",
                 "",
-                datos["fecha_generacion"],
             ])
             return buffer.getvalue().rstrip("\n")
 
@@ -69,26 +66,21 @@ class ExportadorCSV(ExportadorReporte):
                         item["opcion"],
                         item["cantidad"],
                         "{:.1f}%".format(item["porcentaje"]),
-                        datos["fecha_generacion"],
-        ])
+                    ])
             elif pregunta["analisis"] == "escala":
                 est = pregunta["estadisticas"]
-                escritor.writerow(base + ["Media", est["media"], "", datos["fecha_generacion"]])
-                escritor.writerow(base + ["Mediana", est["mediana"], "", datos["fecha_generacion"]])
+                media = "" if est["media"] is None else est["media"]
+                mediana = "" if est["mediana"] is None else est["mediana"]
+                escritor.writerow(base + ["Media", media, ""])
+                escritor.writerow(base + ["Mediana", mediana, ""])
                 escritor.writerow(base + [
                     "Moda",
                     ", ".join(str(m) for m in est["moda"]),
                     "",
-                    datos["fecha_generacion"],
                 ])
             else:
                 for respuesta_texto in pregunta["respuestas"]:
-                    escritor.writerow(base + [
-                    "Respuesta",
-                    respuesta_texto,
-                    "",
-                    datos["fecha_generacion"],
-        ])
+                    escritor.writerow(base + ["Respuesta", respuesta_texto, ""])
 
         return buffer.getvalue().rstrip("\n")
 
