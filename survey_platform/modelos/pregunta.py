@@ -18,7 +18,7 @@ class Pregunta(ElementoEncuesta):
 
     @property
     def es_obligatoria(self):
-        # Se agrega esta propiedad para consultar si la pregunta es obligatoria
+        # Indica si la pregunta requiere respuesta obligatoria
         return False
 
     @abstractmethod
@@ -30,7 +30,7 @@ class Pregunta(ElementoEncuesta):
         return "[{}] {}".format(self.tipo, self.enunciado)
 
     def mostrar(self, nivel=0):
-        # Se agrega esta funcion como hoja del patron composite
+        # Representacion identada de la pregunta como hoja del arbol Composite
         return "{}{}".format("  " * nivel, self.describir())
 
     def contar(self):

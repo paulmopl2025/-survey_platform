@@ -26,7 +26,7 @@ class Encuesta:
 
     @property
     def preguntas(self):
-        # Se agrega esta propiedad para mantener compatibilidad con reportes y respuestas
+        # Obtiene la lista plana de todas las preguntas hoja en orden de recorrido
         lista = []
         for elemento in self.elementos:
             lista.extend(elemento.obtener_preguntas())
@@ -34,11 +34,11 @@ class Encuesta:
 
     @property
     def secciones(self):
-        # Se agrega esta propiedad para consultar las secciones de la encuesta
+        # Lista todas las secciones y subsecciones registradas en la encuesta
         return [s for s, _ in self.obtener_secciones_con_nivel()]
 
     def obtener_secciones_con_nivel(self):
-        # Se agrega esta funcion para obtener las secciones con su profundidad
+        # Recorre el arbol de secciones junto con su nivel de anidacion
         resultado = []
         for elemento in self.elementos:
             if isinstance(elemento, Seccion):
@@ -49,7 +49,7 @@ class Encuesta:
         return any(s is seccion for s in self.secciones)
 
     def agregar_seccion(self, seccion, padre=None):
-        # Se agrega esta funcion para incorporar secciones del patron composite
+        # Incorpora una seccion principal o subseccion dentro del arbol Composite
         if self.estado != ESTADO_BORRADOR:
             raise ValueError("Solo se pueden agregar secciones a una encuesta en Borrador.")
         if not isinstance(seccion, Seccion):
@@ -78,7 +78,7 @@ class Encuesta:
         return "\n".join(elemento.mostrar() for elemento in self.elementos)
 
     def validar_estructura(self):
-        # Se agrega esta funcion para validar todas las secciones y preguntas
+        # Valida recursivamente todas las secciones y preguntas antes de publicar
         for elemento in self.elementos:
             elemento.validar()
         return True

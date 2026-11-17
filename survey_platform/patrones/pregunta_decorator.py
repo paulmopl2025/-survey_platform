@@ -2,7 +2,7 @@ from patrones.seccion_composite import ElementoEncuesta
 
 
 class PreguntaDecorator(ElementoEncuesta):
-    # Se agrega el patron decorator como base para envolver preguntas
+    # Patron Decorator clase base para envolver preguntas dinamicamente
 
     def __init__(self, pregunta):
         if not isinstance(pregunta, ElementoEncuesta) or not hasattr(pregunta, "validar_respuesta"):
@@ -51,7 +51,7 @@ class PreguntaDecorator(ElementoEncuesta):
 
 
 class Obligatoria(PreguntaDecorator):
-    # Se agrega decorador para exigir respuesta obligatoria
+    # Decorador que exige respuesta obligatoria al participante
 
     @property
     def es_obligatoria(self):
@@ -71,7 +71,7 @@ class Obligatoria(PreguntaDecorator):
 
 
 class ConAyuda(PreguntaDecorator):
-    # Se agrega decorador para mostrar texto de ayuda en la pregunta
+    # Decorador que muestra un texto de ayuda junto a la pregunta
 
     def __init__(self, pregunta, ayuda):
         super().__init__(pregunta)
@@ -84,7 +84,7 @@ class ConAyuda(PreguntaDecorator):
 
 
 class ConValidacion(PreguntaDecorator):
-    # Se agrega decorador para agregar validaciones configurables
+    # Decorador que aplica reglas adicionales de validacion a la respuesta
 
     def __init__(self, pregunta, min_caracteres=None, min_opciones=None):
         super().__init__(pregunta)

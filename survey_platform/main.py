@@ -31,7 +31,7 @@ class MenuConsola:
             "3": ("Escala 1-5", CreadorEscala(), False),
             "4": ("Texto libre", CreadorTextoLibre(), False),
         }
-        # Se agrega el mapeo de exportadores para el patron adapter
+        # Mapeo de exportadores disponibles para el patron Adapter
         self.exportadores = {
             "1": ("CSV", ExportadorCSV),
             "2": ("JSON", ExportadorJSON),
@@ -110,7 +110,7 @@ class MenuConsola:
             encuesta.titulo, encuesta.id, encuesta.estado))
 
     def _elegir_seccion(self, encuesta, mensaje, permitir_enter=False):
-        # Se agrega esta funcion para seleccionar una seccion de la encuesta
+        # Muestra las secciones disponibles y retorna la elegida por el usuario
         secciones = encuesta.obtener_secciones_con_nivel()
         if not secciones:
             return None
@@ -127,7 +127,7 @@ class MenuConsola:
         return False
 
     def _crear_seccion(self, encuesta, proxy):
-        # Se agrega esta funcion para crear secciones y subsecciones con composite
+        # Permite crear una seccion principal o una subseccion mediante Composite
         padre = None
         if encuesta.secciones:
             print("\nSecciones existentes (elige un número para crear una subsección dentro):")
@@ -158,7 +158,7 @@ class MenuConsola:
         return True
 
     def _aplicar_decoradores(self, pregunta):
-        # Se agrega esta funcion para envolver la pregunta con decoradores combinables
+        # Envuelve la pregunta con los decoradores configurados por el creador
         aplicados = []
         while True:
             resp = input("¿Es obligatoria? (s/n): ").strip().lower()
@@ -204,7 +204,7 @@ class MenuConsola:
         return pregunta
 
     def _agregar_preguntas_en(self, encuesta, proxy, seccion=None):
-        # Se agrega esta funcion para agregar preguntas en una seccion o directamente
+        # Solicita los datos de cada pregunta y la registra en la seccion o encuesta
         while True:
             print("\nTipo de pregunta (Enter para volver):")
             for clave, (nombre, _, _) in self.tipos_de_pregunta.items():
@@ -313,7 +313,7 @@ class MenuConsola:
         print("[Singleton] Encuesta publicada. Token de acceso (enlace) único: {}".format(token))
 
     def _responder_elementos(self, elementos, valores, numero=1, nivel=0):
-        # Se agrega esta funcion para mostrar secciones y preguntas usando composite
+        # Recorre recursivamente las secciones y preguntas al responder la encuesta
         sangria = "  " * nivel
         for elemento in elementos:
             if isinstance(elemento, Seccion):
@@ -382,7 +382,7 @@ class MenuConsola:
         self._exportar_resultados(encuesta, proxy)
 
     def _exportar_resultados(self, encuesta, proxy):
-        # Se agrega esta funcion para exportar resultados con el patron adapter
+        # Ofrece exportar el reporte en formato CSV o JSON mediante Adapter
         while True:
             print("\n¿Deseas exportar este reporte? (Enter para volver al menú)")
             for clave, (nombre, _) in self.exportadores.items():

@@ -71,7 +71,7 @@ class EncuestaProxy(GestionEncuesta):
                     self._usuario, accion, self._encuesta.titulo, self._encuesta.creador))
 
     def agregar_seccion(self, seccion, padre=None):
-        # Se agrega esta funcion para proteger la creacion de secciones con proxy
+        # Protege la creacion de secciones verificando que sea el creador
         self.verificar_acceso("modificar")
         self._real.agregar_seccion(seccion, padre)
 

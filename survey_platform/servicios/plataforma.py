@@ -1,12 +1,6 @@
-from modelos.encuesta import (
-    ESTADO_BORRADOR,
-    ESTADO_PUBLICADA,
-    PRIVACIDAD_ELIGE,
-    PRIVACIDAD_NOMBRE,
-)
+from modelos.encuesta import ESTADO_PUBLICADA, PRIVACIDAD_NOMBRE
 from modelos.reporte import ReporteGeneral
 from modelos.respuesta import RespuestaEncuesta
-from patrones.encuesta_builder import EncuestaBuilder
 from patrones.token_generator import TokenGenerator
 
 
@@ -72,5 +66,5 @@ class Plataforma:
         return reporte.generar(encuesta, self.respuestas_de(encuesta))
 
     def exportar_reporte(self, encuesta, exportador):
-        # Se agrega esta funcion para exportar el reporte usando el patron adapter
+        # Patron Adapter delega la exportacion del reporte al adaptador elegido
         return exportador.exportar(encuesta, self.respuestas_de(encuesta))

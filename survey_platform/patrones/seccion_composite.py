@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 
 class ElementoEncuesta(ABC):
-    # Se agrega el patron composite como interfaz comun para secciones y preguntas
+    # Patron Composite interfaz comun para secciones y preguntas
 
     @abstractmethod
     def mostrar(self, nivel=0):
@@ -22,7 +22,7 @@ class ElementoEncuesta(ABC):
 
 
 class Seccion(ElementoEncuesta):
-    # Se agrega la clase compuesta para agrupar preguntas y subsecciones
+    # Componente compuesto que agrupa preguntas y subsecciones
 
     def __init__(self, titulo):
         if not titulo or not titulo.strip():
@@ -31,7 +31,7 @@ class Seccion(ElementoEncuesta):
         self.elementos = []
 
     def agregar(self, elemento):
-        # Se agrega esta funcion para incorporar preguntas o subsecciones
+        # Incorpora una pregunta o subseccion dentro de la seccion actual
         if elemento is self:
             raise ValueError("Una sección no puede contenerse a sí misma.")
         if not isinstance(elemento, ElementoEncuesta):
@@ -42,7 +42,7 @@ class Seccion(ElementoEncuesta):
         return sum(elemento.contar() for elemento in self.elementos)
 
     def contar_directas(self):
-        # Se agrega esta funcion para contar solo las preguntas directas de la seccion
+        # Cuenta unicamente las preguntas directas de esta seccion
         return sum(
             1 for elemento in self.elementos if not isinstance(elemento, Seccion)
         )
@@ -54,7 +54,7 @@ class Seccion(ElementoEncuesta):
         return preguntas
 
     def obtener_secciones(self, nivel=0):
-        # Se agrega esta funcion para listar secciones y subsecciones con su nivel
+        # Lista recursivamente las secciones y subsecciones con su nivel de profundidad
         resultado = [(self, nivel)]
         for elemento in self.elementos:
             if isinstance(elemento, Seccion):

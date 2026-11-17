@@ -28,7 +28,7 @@ class ReporteAnalitico(ABC):
         return "\n".join(lineas)
 
     def construir_datos(self, encuesta, respuestas):
-        # Se agrega esta funcion para exponer los datos del reporte al adaptador
+        # Construye la estructura de datos del reporte para los adaptadores de exportacion
         total = len(respuestas)
         datos = {
             "encuesta_id": encuesta.id,
@@ -72,7 +72,7 @@ class ReporteAnalitico(ABC):
         return datos
 
     def _contar_opciones(self, pregunta, valores):
-        # Se agrega esta funcion para reutilizar el conteo de opciones
+        # Cuenta la frecuencia de cada opcion configurada en la pregunta
         elegidas = []
         for v in valores:
             if v is None:
@@ -106,7 +106,7 @@ class ReporteAnalitico(ABC):
         return lineas
 
     def _resumen_estadistico(self, valores):
-        # Se agrega esta funcion para reutilizar los calculos estadisticos
+        # Calcula media mediana y moda para preguntas de escala
         media = statistics.mean(valores)
         mediana = statistics.median(valores)
         conteo = Counter(valores)

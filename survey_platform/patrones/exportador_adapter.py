@@ -7,7 +7,7 @@ from modelos.reporte import ReporteGeneral
 
 
 class ExportadorReporte(ABC):
-    # Se agrega el patron adapter para exportar reportes a distintos formatos
+    # Patron Adapter interfaz objetivo comun para exportar reportes a distintos formatos
 
     def __init__(self, reporte=None):
         self._reporte = reporte
@@ -22,7 +22,7 @@ class ExportadorReporte(ABC):
 
 
 class ExportadorCSV(ExportadorReporte):
-    # Se agrega adaptador para exportar resultados en formato CSV
+    # Adaptador que convierte los datos del reporte a formato CSV
 
     def exportar(self, encuesta, respuestas):
         datos = self._obtener_datos(encuesta, respuestas)
@@ -86,7 +86,7 @@ class ExportadorCSV(ExportadorReporte):
 
 
 class ExportadorJSON(ExportadorReporte):
-    # Se agrega adaptador para exportar resultados en formato JSON
+    # Adaptador que convierte los datos del reporte a formato JSON
 
     def exportar(self, encuesta, respuestas):
         datos = self._obtener_datos(encuesta, respuestas)
